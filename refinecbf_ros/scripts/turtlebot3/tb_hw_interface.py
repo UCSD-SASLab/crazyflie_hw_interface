@@ -66,7 +66,7 @@ class TurtlebotInterface(BaseInterface):
         control_out_msg = Array()
         control_out_msg.value = [control_in_msg.angular.z, control_in_msg.linear.x]
         new_val = np.array(control_out_msg.value)
-        if (self.external_control is None):# or (not np.allclose(self.external_control, new_val, atol=1e-1, rtol=1e-1)):
+        if (self.external_control is None) or (not np.allclose(self.external_control, new_val, atol=1e-1, rtol=1e-1)):
             # If the external control has changed, then reset the external control mod timestamp
             self.external_control_mod_ts = rospy.get_time()
             self.external_control = new_val
@@ -75,12 +75,14 @@ class TurtlebotInterface(BaseInterface):
         self.external_control_ts = rospy.get_time()
         return control_out_msg
     
-    def override_safe_control(self):
+    def override_nominal_control(self):
         curr_time = rospy.get_time()
+
         # Determine if external control should be published
         return (
             self.external_control is not None
             and (curr_time - self.external_control_ts) <= self.external_control_time_buffer
+            and (curr_time - self.external_control_mod_ts) <= self.external_control_change_time_buffer
         )
 
 

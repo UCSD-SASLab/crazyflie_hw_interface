@@ -17,7 +17,7 @@ class JackalVisualization(Visualization):
         
         super().__init__()
 
-    def obstacle_marker(self,obstacle,obstacle_marker_id,active):
+    def obstacle_marker(self,obstacle,obstacle_marker_id):
         marker = Marker()
         marker.header.frame_id = "odom"
         if obstacle["type"] == "Circle":
@@ -30,16 +30,10 @@ class JackalVisualization(Visualization):
             marker.scale.z = .5
 
             marker.color = ColorRGBA()
-            if active:
-                marker.color.r = 0.0
-                marker.color.g = 1.0
-                marker.color.b = 0.0
-                marker.color.a = 0.75
-            else:
-                marker.color.r = 1.0
-                marker.color.g = 0.0
-                marker.color.b = 0.0
-                marker.color.a = 0.5
+            marker.color.r = 1.0
+            marker.color.g = 0.0
+            marker.color.b = 0.0
+            marker.color.a = 0.75
 
             marker.pose.position.x = obstacle['center'][0]
             marker.pose.position.y = obstacle['center'][1]
@@ -62,16 +56,10 @@ class JackalVisualization(Visualization):
             marker.scale.z = 0.5
 
             marker.color = ColorRGBA()
-            if active:
-                marker.color.r = 0.0
-                marker.color.g = 1.0
-                marker.color.b = 0.0
-                marker.color.a = 0.75
-            else:
-                marker.color.r = 1.0
-                marker.color.g = 0.0
-                marker.color.b = 0.0
-                marker.color.a = 0.5
+            marker.color.r = 1.0
+            marker.color.g = 0.0
+            marker.color.b = 0.0
+            marker.color.a = 0.75
 
             marker.pose.position.x = (obstacle['maxVal'][0]+obstacle['minVal'][0])/2.0
             marker.pose.position.y = (obstacle['maxVal'][1]+obstacle['minVal'][1])/2.0
@@ -129,34 +117,6 @@ class JackalVisualization(Visualization):
 
         return marker
     
-    def goal_marker(self, control_dict,goal_marker_id):
-        marker = Marker()
-        marker.header.frame_id = "odom"
-
-        marker.type = Marker.POINTS
-        marker.action = Marker.ADD
-        marker.scale.x = .1 # Point Width
-        marker.scale.y = .1
-
-        marker.color = ColorRGBA()
-        marker.color.a = 1.0
-        marker.color.r = 0.0
-        marker.color.g = 1.0
-        marker.color.b = 0.0
-
-        square_vertices = [
-            Point(control_dict["goal"]["coordinates"][0]-control_dict["goal"]["padding"][0],control_dict["goal"]["coordinates"][1]-control_dict["goal"]["padding"][1],0.0),
-            Point(control_dict["goal"]["coordinates"][0]-control_dict["goal"]["padding"][0],control_dict["goal"]["coordinates"][1]+control_dict["goal"]["padding"][1],0.0),
-            Point(control_dict["goal"]["coordinates"][0]+control_dict["goal"]["padding"][0],control_dict["goal"]["coordinates"][1]+control_dict["goal"]["padding"][1],0.0),
-            Point(control_dict["goal"]["coordinates"][0]+control_dict["goal"]["padding"][0],control_dict["goal"]["coordinates"][1]-control_dict["goal"]["padding"][1],0.0),
-            Point(control_dict["goal"]["coordinates"][0]-control_dict["goal"]["padding"][0],control_dict["goal"]["coordinates"][1]-control_dict["goal"]["padding"][1],0.0)
-        ]
-
-        marker.points.extend(square_vertices)
-        marker.id = goal_marker_id
-
-        return marker
-    
     def zero_level_set_contour(self,vf):
         robot_state = self.clip_state(self.robot_state)
         contour = plt.contour(self.grid.coordinate_vectors[0], 
@@ -167,6 +127,6 @@ class JackalVisualization(Visualization):
 
 
 if __name__ == '__main__':
-    rospy.init_node('jackal_visualization', anonymous=True)
+    rospy.init_node('tb_visualization', anonymous=True)
     JackalVisualization()
     rospy.spin()

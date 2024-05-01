@@ -9,10 +9,6 @@ from refinecbf_ros.config import Config
 import numpy as np
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
-import warnings
-
-# Suppress the warning
-warnings.filterwarnings("ignore", category=UserWarning)
 
 
 class Visualization:

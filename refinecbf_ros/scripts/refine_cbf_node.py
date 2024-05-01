@@ -9,7 +9,6 @@ from cbf_opt import ControlAffineASIF
 from refine_cbfs import TabularControlAffineCBF
 from refinecbf_ros.config import Config
 from cbf_opt import ControlAffineASIF, SlackifiedControlAffineASIF
-import cvxpy as cp
 
 
 class SafetyFilterNode:
@@ -44,9 +43,9 @@ class SafetyFilterNode:
         self.cbf = TabularControlAffineCBF(self.dynamics, grid=self.grid, alpha=alpha)
 
         if slackify_safety_constraint:
-            self.safety_filter_solver = SlackifiedControlAffineASIF(self.dynamics, self.cbf,solver=cp.GUROBI)
+            self.safety_filter_solver = SlackifiedControlAffineASIF(self.dynamics, self.cbf)
         else:  # strict equality
-            self.safety_filter_solver = ControlAffineASIF(self.dynamics, self.cbf,solver=cp.GUROBI)
+            self.safety_filter_solver = ControlAffineASIF(self.dynamics, self.cbf)
 
         self.safety_filter_solver.umin = np.array(config.control_space["lo"])
         self.safety_filter_solver.umax = np.array(config.control_space["hi"])

@@ -73,10 +73,10 @@
   <arg name="publish_external_control_flag" value="/safety_filter/externally_controlled" />
 
   <!-- Loading and storing the environment and nominal control parameters -->
-  <arg name="config_file_loc" value="$(find refinecbf_ros)/config/Crazyflie/$(arg env_config_file)" />
+  <arg name="config_file_loc" value="$(find refinecbf_ros)/config/$(arg env_config_file)" />
   <rosparam ns="env" file="$(arg config_file_loc)" command="load" />
   <arg name="control_config_file_loc"
-    value="$(find refinecbf_ros)/config/Crazyflie/$(arg control_config_file)" />
+    value="$(find refinecbf_ros)/config/$(arg control_config_file)" />
   <rosparam ns="ctr" file="$(arg control_config_file_loc)" />
 
   <!-- Nominal control and its bounds -->

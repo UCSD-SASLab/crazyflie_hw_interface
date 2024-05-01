@@ -11,9 +11,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from jackal.hjr_nominal_control import NominalControlHJ
-from jackal.pd_nominal_control import NominalControlPD
 from template.nominal_controller import NominalController
-
 
 class JackalNominalControl(NominalController):
     def __init__(self):
@@ -35,37 +33,27 @@ class JackalNominalControl(NominalController):
         assert self.time_intervals > 0
         self.solver_accuracy = rospy.get_param("/ctr/nominal/goal/solver_accuracy", "low")
         assert self.solver_accuracy in ["low", "medium", "high", "very_high"]
-        self.umin = jnp.array(rospy.get_param("/env/control_space/lo"))
-        self.umax = jnp.array(rospy.get_param("/env/control_space/hi"))
-
-        controller_type = rospy.get_param("~controller_type")
 
         # Initialize Controller
-        if controller_type == "HJR":
-            self.controller_prep = NominalControlHJ(
-                self.hj_dynamics,
-                self.grid,
-                final_time=self.max_time,
-                time_intervals=self.time_intervals,
-                solver_accuracy=self.solver_accuracy,
-                target=self.target,
-                padding=self.padding,
-            )
-            rospy.loginfo("Solving for nominal control, nominal control default is 0")
-            self.controller = lambda x, t: np.zeros(self.dynamics.control_dims)
-            self.controller_prep.solve()  # Solves the problem so that it becomes table lookup
-            self.controller = self.controller_prep.get_nominal_control
-        elif controller_type == "PD":
-            self.controller = NominalControlPD(target=self.target,umin=self.umin,umax=self.umax).get_nominal_control
-        else:
-            raise ValueError(
-                            "Invalid Controller Type: {}".format(controller_type))
+        self.controller_prep = NominalControlHJ(
+            self.hj_dynamics,
+            self.grid,
+            final_time=self.max_time,
+            time_intervals=self.time_intervals,
+            solver_accuracy=self.solver_accuracy,
+            target=self.target,
+            padding=self.padding,
+        )
+        rospy.loginfo("Solving for nominal control, nominal control default is 0")
+        self.controller = lambda x, t: np.zeros(self.dynamics.control_dims)
+        self.controller_prep.solve()  # Solves the problem so that it becomes table lookup
+        self.controller = self.controller_prep.get_nominal_control
 
         rospy.loginfo("Nominal controller ready!")
 
 
 if __name__ == "__main__":
-    rospy.init_node("tb3_nominal_control_node")
+    rospy.init_node("jackal_nominal_control_node")
     Controller = JackalNominalControl()
 
     rate = rospy.Rate(rospy.get_param("/ctr/nominal/frequency"))

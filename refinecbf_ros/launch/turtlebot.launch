@@ -19,13 +19,7 @@
   <arg name="vf_initialization_method" default="sdf" />
   
     <!-- Simulation or hardware -->
-  <arg name="hardware" default="False" />
-
-  <!-- Teleop Active or Not-->
-  <arg name="teleop" default="True" />
-
-  <!-- Debugger On or Not -->
-  <arg name="debug" default="True" />
+  <arg name="hardware" default="false" />
 
     <!-- What message passing method to use
           Options:
@@ -36,27 +30,22 @@
   <arg name="vf_update_accuracy" default="high" />
 
     <!-- Choose which files to load to describe the environment -->
-  <arg name="env_config_file" default="Experiment1/env.yaml" />
+  <arg name="env_config_file" default="turtlebot_env.yaml" />
   
     <!-- Choose which files to load to describe the refinecbf internal nominal controller -->
-  <arg name="control_config_file" default="Experiment1/control.yaml" />
+  <arg name="control_config_file" default="turtlebot_control.yaml" />
 
     <!-- Choose the name of CBF parameter file or initial vf file -->
-  <arg name="CBF_parameter_file" default="Experiment1/CBF_params.yaml" />
+  <arg name="CBF_parameter_file" default="turtlebot_CBF_params.yaml" />
   <arg name="initial_vf_file" default="turtlebot_vf.npy" />
 
     <!-- Choose the Nominal Controller to be used. Options: PD or HJR-->
   <arg name="nominal_controller_type" default="PD" />
 
-    <!-- Start point for the simulator. -->
-  <arg name="sim_init_x" value="-1.75" />
-  <arg name="sim_init_y" value="-1.75" />
-
 
   <!-- ___________________________________________________________________________________________________________ -->
   <!-- Topics that are typically fixed and are shared between different launch files -->
-  <arg name="robot_state_topic" value="/odom" unless="$(arg hardware)"/>
-  <arg name="robot_state_topic" value="/odom" if="$(arg hardware)"/>
+  <arg name="robot_state_topic" value="/odom" />
   <arg name="cbf_state_topic" value="/safety_filter/state" />
 
   <arg name="disturbance_update_topic" value="/env/disturbance_update" />
@@ -64,8 +53,7 @@
   <arg name="sdf_update_topic" value="/env/sdf_update" />
   <arg name="vf_update_topic" value="/safety_filter/vf_update" />
 
-  <arg name="robot_safe_control_topic" value="/robot/final_control" unless="$(arg hardware)"/>
-  <arg name="robot_safe_control_topic" value="/cmd_vel" if="$(arg hardware)"/>
+  <arg name="robot_safe_control_topic" value="/robot/final_control" />
   <arg name="cbf_safe_control_topic" value="/safety_filter/safe_control" />
 
   <arg name="cbf_nominal_control_topic" value="/safety_filter/nominal_control" />
@@ -80,15 +68,15 @@
   <arg name="activate_obstacle_service" value="/env/activate_obstacle" />
 
   <!-- Could be either set to intercepting the teleop commands or remapping turtlebot packages -->
-  <arg name="robot_external_control_topic" value="/teleop_control" />
+  <arg name="robot_external_control_topic" value="/cmd_vel" />
   <arg name="cbf_external_control_topic" value="/safety_filter/external_control" />
   <arg name="publish_external_control_flag" value="/safety_filter/externally_controlled" />
 
-  <arg name="config_file_loc" value="$(find refinecbf_ros)/config/Turtlebot/$(arg env_config_file)" />
+  <arg name="config_file_loc" value="$(find refinecbf_ros)/config/$(arg env_config_file)" />
   <rosparam ns="env" file="$(arg config_file_loc)" command="load" />
   
   <arg name="control_config_file_loc"
-    value="$(find refinecbf_ros)/config/Turtlebot/$(arg control_config_file)" />
+    value="$(find refinecbf_ros)/config/$(arg control_config_file)" />
   <rosparam ns="ctr" file="$(arg control_config_file_loc)" />
 
   <!-- ___________________________________________________________________________________________________________ -->
@@ -143,50 +131,11 @@
     <param name="vf_update_method" value="$(arg vf_update_method)" />
   </node>
 
-  <group if="$(eval arg('teleop') == 1)">
-    <!-- <remap from="cmd_vel" to="$(arg robot_external_control_topic)" />
-    <include file="$(find turtlebot3_teleop)/launch/turtlebot3_teleop_key.launch">
-      <arg name="model" value="burger" />
-    </include> -->
-    <!-- <node pkg="turtlebot3_teleop" type="turtlebot3_teleop_key" name="turtlebot3_teleop_keyboard"  output="log">
-      <remap from="cmd_vel" to="$(arg robot_external_control_topic)" />
-      <param name="model" value="burger" />
-    </node> -->
-    <node name="turtlebot_teleoperation"
-      pkg="refinecbf_ros"
-      type="tb_teleop.py"
-      output="screen">
-      <param name="topics/robot_external_control" value="$(arg robot_external_control_topic)" />
-    </node>
-  </group>
-
-  <group if="$(eval arg('hardware') == 0)">
+  <group>
     <remap from="cmd_vel" to="$(arg robot_safe_control_topic)" />
     <include file="$(find turtlebot3_fake)/launch/turtlebot3_fake.launch">
       <arg name="model" value="burger" />
     </include>
-    <!-- Publish initial pose after turtlebot3_fake node has started -->
-    <!-- <node name="publish_odometry" pkg="rostopic" type="rostopic" args="pub -r 1 /odom nav_msgs/Odometry '{header: {stamp: now, frame_id: 'odom'}, child_frame_id: 'base_link', pose: {pose: {position: {x: 1.0, y: 0.0, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}}, covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}}'" /> -->
-  </group>
-
-  <!-- <group if="$(eval arg('hardware') == 1)">
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot3_fake)/rviz/turtlebot3_fake.rviz"/>
-  </group> -->
-
-  <group if="$(eval arg('debug') == 1)">
-    <node name="tb_debug_plotter"
-      pkg="refinecbf_ros"
-      type="tb_debug_plotter.py"
-      output="screen">
-      <param name="topics/sdf_update" value="$(arg sdf_update_topic)" />
-      <param name="topics/cbf_state" value="$(arg cbf_state_topic)" />
-      <param name="topics/vf_update" value="$(arg vf_update_topic)" />
-      <param name="vf_update_method" value="$(arg vf_update_method)" />
-      <param name="topics/robot_state" value="$(arg robot_state_topic)" />
-      <param name="topics/cbf_safe_control" value="$(arg cbf_safe_control_topic)" />
-      <param name="topics/robot_external_control" value="$(arg robot_external_control_topic)" />
-      <param name="vf_update_method" value="$(arg vf_update_method)" />
-    </node>
   </group>
 
   <include file="$(find refinecbf_ros)/launch/refine_cbf.launch">
@@ -200,7 +149,7 @@
     <arg name="safety_filter_active" value="$(arg safety_filter_active)" />
     <arg name="vf_initialization_method" value="$(arg vf_initialization_method)"/>
     <arg name="update_vf_online" value="$(arg update_vf_online)" />
-    <arg name="CBF_parameter_file" value="Turtlebot/$(arg CBF_parameter_file)" />
+    <arg name="CBF_parameter_file" value="$(arg CBF_parameter_file)" />
     <arg name="initial_vf_file" value="$(arg initial_vf_file)" />
     <arg name="vf_update_method" value="$(arg vf_update_method)" />
     <arg name="vf_update_accuracy" value="$(arg vf_update_accuracy)" />

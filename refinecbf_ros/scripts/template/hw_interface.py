@@ -83,7 +83,7 @@ class BaseInterface:
         """
         control_out_msg = self.process_safe_control(control_in_msg)
         assert type(control_out_msg) == self.control_out_msg_type, "Override to process the safe control message"
-        if not self.override_safe_control() and not self.override_nominal_control():
+        if not self.override_safe_control():
             self.safe_control_pub.publish(control_out_msg)
 
     def callback_external_control(self, control_in_msg):
@@ -101,7 +101,7 @@ class BaseInterface:
         control_out_msg = self.process_external_control(control_in_msg)
         assert type(control_out_msg) == Array, "Override to process the external control message"
         if self.override_nominal_control():
-            self.external_control_pub.publish(control_out_msg)
+            self.external_control_pub.publish(control_out_msg) if self.override_nominal_control() else None
 
     def callback_disturbance(self, disturbance_msg):
         disturbance_out_msg = self.process_disturbance(disturbance_msg)

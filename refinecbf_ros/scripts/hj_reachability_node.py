@@ -122,7 +122,7 @@ class HJReachabilityNode:
         self.update_vf()  # This keeps spinning
 
     def publish_initial_vf(self):
-        while self.vf_pub.get_num_connections() <=2 and not rospy.is_shutdown():
+        while self.vf_pub.get_num_connections() != 2:
             rospy.loginfo("HJR node: Waiting for subscribers to connect")
             rospy.sleep(1)
         if self.vf_update_method == "pubsub":
@@ -203,7 +203,7 @@ class HJReachabilityNode:
         while not rospy.is_shutdown():
             if self.update_vf_flag:
                 with self.vf_lock:
-                    # rospy.loginfo("Share of safe cells: {:.3f}".format(np.sum(self.vf >= 0) / self.vf.size))
+                    rospy.loginfo("Share of safe cells: {:.3f}".format(np.sum(self.vf >= 0) / self.vf.size))
                     time_now = rospy.Time.now().to_sec()
                     new_values = hj.step(
                         self.solver_settings,
@@ -214,15 +214,14 @@ class HJReachabilityNode:
                         -0.1,
                         progress_bar=False,
                     )
-                    # rospy.loginfo("Time taken to calculate vf: {:.2f}".format(rospy.Time.now().to_sec() - time_now))
+                    rospy.loginfo("Time taken to calculate vf: {:.2f}".format(rospy.Time.now().to_sec() - time_now))
                     self.vf = new_values
-                
                 if self.vf_update_method == "pubsub":
                     self.vf_pub.publish(ValueFunctionMsg(np.array(self.vf).flatten()))
                 else:  # self.vf_update_method == "file"
                     np.save("./vf.npy", self.vf)
                     self.vf_pub.publish(Bool(True))
-            
+
             rospy.sleep(0.05)  # To make sure that subscribers can run
 
 
