@@ -48,10 +48,6 @@ class Visualization:
         self.obstacle_update_sub = rospy.Subscriber(obstacle_update_topic,Obstacles,self.callback_obstacle)
         self.active_obstacle_names = []
 
-        # Subscriber for Robot State:
-        cbf_state_topic = rospy.get_param("~topics/cbf_state")
-        state_sub = rospy.Subscriber(cbf_state_topic, Array, self.callback_state)
-
         # Publisher for Marker messages
         obstacle_marker_topic = rospy.get_param("~topics/obstacle_marker")
         self.obstacle_marker_publisher = rospy.Publisher(obstacle_marker_topic, Marker, queue_size=10)
@@ -67,6 +63,10 @@ class Visualization:
         # Publisher for Goal:
         goal_marker_topic = rospy.get_param("~topics/goal_marker")
         self.goal_marker_publisher = rospy.Publisher(goal_marker_topic, Marker, queue_size=10)
+
+        # Subscriber for Robot State:
+        cbf_state_topic = rospy.get_param("~topics/cbf_state")
+        state_sub = rospy.Subscriber(cbf_state_topic, Array, self.callback_state)
 
         # load Obstacle and Boundary dictionaries
         self.obstacle_dict = rospy.get_param("~/env/obstacles")

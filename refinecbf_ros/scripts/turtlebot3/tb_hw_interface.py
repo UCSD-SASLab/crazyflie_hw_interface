@@ -4,6 +4,7 @@ import rospy
 import numpy as np
 
 from geometry_msgs.msg import Twist
+from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry
 from refinecbf_ros.msg import Array
 import sys
@@ -21,12 +22,18 @@ class TurtlebotInterface(BaseInterface):
     Each HW platform should have its own Interface node
     """
 
-    state_msg_type = Odometry
+    # state_msg_type = Odometry
     control_out_msg_type = Twist
     external_control_msg_type = Twist
 
     def __init__(self):
         # Initialize external control parameters
+        self.hardware = rospy.get_param("~hardware")
+        if self.hardware:
+            self.state_msg_type = PoseStamped
+        else:
+            self.state_msg_type = Odometry
+
         self.external_control = None
         self.external_control_time_buffer = rospy.get_param("/ctr/external_control_buffer", 1.0)  # seconds
         self.external_control_change_time_buffer = rospy.get_param(
@@ -36,17 +43,27 @@ class TurtlebotInterface(BaseInterface):
         super().__init__()
 
     def callback_state(self, state_in_msg):
-        w = state_in_msg.pose.pose.orientation.w
-        x = state_in_msg.pose.pose.orientation.x
-        y = state_in_msg.pose.pose.orientation.y
-        z = state_in_msg.pose.pose.orientation.z
+        if self.hardware:
+            w = state_in_msg.pose.orientation.w
+            x = state_in_msg.pose.orientation.x
+            y = state_in_msg.pose.orientation.y
+            z = state_in_msg.pose.orientation.z
+            xx = state_in_msg.pose.position.x
+            yy = state_in_msg.pose.position.y
+        else:
+            w = state_in_msg.pose.pose.orientation.w
+            x = state_in_msg.pose.pose.orientation.x
+            y = state_in_msg.pose.pose.orientation.y
+            z = state_in_msg.pose.pose.orientation.z
+            xx = state_in_msg.pose.pose.position.x
+            yy = state_in_msg.pose.pose.position.y
 
         # Convert Quaternion to Yaw
         yaw = np.arctan2(2 * (w * z + x * y), 1 - 2 * (np.power(y, 2) + np.power(z, 2))) + np.pi / 2 # FIXME: why is this necessary? I think it has something to do with the odom and rviz coordinate frames
         yaw = np.arctan2(np.sin(yaw),np.cos(yaw)) # Remap yaw to -pi to pi range
 
         state_out_msg = Array()
-        state_out_msg.value = [state_in_msg.pose.pose.position.x, state_in_msg.pose.pose.position.y, yaw]
+        state_out_msg.value = [xx, yy, yaw]
         self.state_pub.publish(state_out_msg)
 
     def process_safe_control(self, control_in_msg):

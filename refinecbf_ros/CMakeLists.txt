@@ -169,6 +169,7 @@ include_directories(
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
   scripts/set_reference.py
+  scripts/tf_to_subscriber.py
   scripts/hj_reachability_node.py
   scripts/refine_cbf_node.py
   scripts/turtlebot3/tb_nominal_controller.py

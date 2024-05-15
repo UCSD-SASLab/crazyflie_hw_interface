@@ -4,7 +4,7 @@
 <!-- Topics that need to be chosen by user and can be varied-->
 
     <!-- Whether we want to use nominal / external control or a safety filter -->
-  <arg name="safety_filter_active" default="True" />
+  <arg name="safety_filter_active" default="False" />
   
     <!-- Whether we want a single fixed value function (no updating) or updating using hj_reachability_node -->
   <arg name="update_vf_online" default="True" /> 
@@ -56,7 +56,9 @@
   <!-- ___________________________________________________________________________________________________________ -->
   <!-- Topics that are typically fixed and are shared between different launch files -->
   <arg name="robot_state_topic" value="/odom" unless="$(arg hardware)"/>
-  <arg name="robot_state_topic" value="/odom" if="$(arg hardware)"/>
+
+  <arg name="robot_state_topic" value="/natnet_ros/robot_1/pose" if="$(arg hardware)"/>
+
   <arg name="cbf_state_topic" value="/safety_filter/state" />
 
   <arg name="disturbance_update_topic" value="/env/disturbance_update" />
@@ -93,6 +95,10 @@
 
   <!-- ___________________________________________________________________________________________________________ -->
   <!-- Below: all the nodes being loaded -->
+  <group if="$(eval arg('hardware') == 1)">
+    <include file="$(find natnet_ros_cpp)/launch/natnet_ros.launch"/>
+  </group>
+
   <node name="turtlebot_nominal_control"
     pkg="refinecbf_ros"
     type="tb_nominal_controller.py"
@@ -115,6 +121,7 @@
     <param name="topics/cbf_safe_control" value="$(arg cbf_safe_control_topic)" />
     <param name="topics/robot_external_control" value="$(arg robot_external_control_topic)" />
     <param name="topics/cbf_external_control" value="$(arg cbf_external_control_topic)" />
+    <param name="hardware" value="$(arg hardware)" />
   </node>
 
   <node name="obstacle_node"
@@ -128,7 +135,7 @@
     <param name="vf_update_method" value="$(arg vf_update_method)" />
   </node>
 
-  <node name="turtlebot_visualization"
+  <!-- <node name="turtlebot_visualization"
     pkg="refinecbf_ros"
     type="tb_visualization.py"
     output="screen">
@@ -141,7 +148,7 @@
     <param name="topics/vf_marker" value="$(arg vf_marker_topic)" />
     <param name="topics/goal_marker" value="$(arg goal_marker_topic)" />
     <param name="vf_update_method" value="$(arg vf_update_method)" />
-  </node>
+  </node> -->
 
   <group if="$(eval arg('teleop') == 1)">
     <!-- <remap from="cmd_vel" to="$(arg robot_external_control_topic)" />

@@ -22,7 +22,8 @@
   <arg name="hardware" default="False" />
 
   <!-- Teleop Active or Not-->
-  <arg name="teleop" default="True" />
+  <arg name="teleop" default="False" />
+
 
     <!-- What message passing method to use
           Options:
@@ -33,6 +34,7 @@
   <arg name="vf_update_accuracy" default="high" />
 
     <!-- Choose which files to load to describe the environment -->
+
   <arg name="env_config_file" default="Experiment1/env.yaml" />
   
     <!-- Choose which files to load to describe the refinecbf internal nominal controller -->
@@ -40,6 +42,7 @@
 
     <!-- Choose the name of CBF parameter file or initial vf file -->
   <arg name="CBF_parameter_file" default="Experiment1/CBF_params.yaml" />
+
   <arg name="initial_vf_file" default="jackal_vf.npy" />
 
     <!-- Choose the Nominal Controller to be used. Options: PD or HJR-->
@@ -47,7 +50,8 @@
 
   <!-- ___________________________________________________________________________________________________________ -->
   <!-- Topics that are typically fixed and are shared between different launch files -->
-  <arg name="robot_state_topic" value="/jackal_velocity_controller/odom" />
+  <arg name="robot_state_topic" value="/sim_state" unless="$(arg hardware)"/>
+  <arg name="robot_state_topic" value="/natnet_ros/jackal/pose" if="$(arg hardware)"/>
   <arg name="cbf_state_topic" value="/safety_filter/state" />
 
   <arg name="disturbance_update_topic" value="/env/disturbance_update" />
@@ -55,7 +59,8 @@
   <arg name="sdf_update_topic" value="/env/sdf_update" />
   <arg name="vf_update_topic" value="/safety_filter/vf_update" />
 
-  <arg name="robot_safe_control_topic" value="/robot/final_control" />
+  <arg name="robot_safe_control_topic" value="/robot/final_control" unless="$(arg hardware)"/>
+  <arg name="robot_safe_control_topic" value="/jackal_velocity_controller/cmd_vel" if="$(arg hardware)"/>
   <arg name="cbf_safe_control_topic" value="/safety_filter/safe_control" />
   <arg name="cbf_nominal_control_topic" value="/safety_filter/nominal_control" />
 
@@ -69,7 +74,7 @@
   <arg name="activate_obstacle_service" value="/env/activate_obstacle" />
 
   <!-- Could be either set to intercepting the teleop commands or remapping jackal packages -->
-  <arg name="robot_external_control_topic" value="/jackal_velocity_controller/cmd_vel" />
+  <arg name="robot_external_control_topic" value="/teleop_control" />
   <arg name="cbf_external_control_topic" value="/safety_filter/external_control" />
   <arg name="publish_external_control_flag" value="/safety_filter/externally_controlled" />
 
@@ -83,6 +88,32 @@
 
   <!-- ___________________________________________________________________________________________________________ -->
   <!-- Below: all the nodes being loaded -->
+  <!-- <group if="$(eval arg('hardware') == 1)">
+    <include file="$(find natnet_ros_cpp)/launch/natnet_ros.launch"/>
+  </group> -->
+
+  <group if="$(eval arg('hardware') == 0)">
+    <remap from="/jackal_velocity_controller/cmd_vel" to="$(arg robot_safe_control_topic)" />
+    <include file="$(find jackal_gazebo)/launch/empty_world.launch">
+      <arg name="joystick" value="false" />
+      <arg name="gui" value="false" />
+    </include>
+  </group>
+
+  <group if="$(eval arg('hardware') == 0)">
+    <node name="jackal_teleoperation"
+      pkg="refinecbf_ros"
+      type="tf_to_subscriber.py"
+      output="screen">
+    </node>
+  </group>
+
+  <group>
+    <param name="use_gui" value="true"/>
+    <arg name="config" default="jackal_rviz" />
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find refinecbf_ros)/rviz/$(arg config).rviz" />
+  </group>
+
   <node name="jackal_nominal_control"
     pkg="refinecbf_ros"
     type="jackal_nominal_controller.py"
@@ -105,6 +136,7 @@
     <param name="topics/cbf_safe_control" value="$(arg cbf_safe_control_topic)" />
     <param name="topics/robot_external_control" value="$(arg robot_external_control_topic)" />
     <param name="topics/cbf_external_control" value="$(arg cbf_external_control_topic)" />
+    <param name="hardware" value="$(arg hardware)" />
   </node>
 
   <node name="obstacle_node"
